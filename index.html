@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FIFA World Cup 2026 — Score Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;--bg2:#111827;--bg3:#1a2236;
+  --border:#ffffff18;--border2:#ffffff30;
+  --text:#f0f4ff;--muted:#8899bb;
+  --accent:#c8a84b;--accent2:#e8c76b;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;
+  --input-bg:#0d1525;
+}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0a0f1e 0%,#1a2a4a 100%);border-bottom:1px solid var(--border2);padding:28px 24px 20px;text-align:center;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,#c8a84b22 0%,transparent 60%);pointer-events:none}
+.header h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(26px,5vw,48px);font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1}
+.header h1 span{color:var(--accent)}
+.header p{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:2px;text-transform:uppercase}
+.trophy{font-size:36px;margin-bottom:10px;display:block}
+
+/* TOP NAV */
+.top-nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);justify-content:space-between;align-items:center;padding:0 16px;position:sticky;top:0;z-index:100}
+.top-nav-left{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.top-nav-left::-webkit-scrollbar{display:none}
+.step-tab{flex-shrink:0;padding:13px 11px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.step-tab:hover{color:var(--text);background:var(--bg3)}
+.step-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.step-tab.done{color:var(--green)}
+.step-tab.locked-stage{opacity:.4;cursor:not-allowed}
+.step-tab.locked-stage::before{content:'🔒 ';font-size:9px}
+.admin-toggle{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:6px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-left:12px}
+.admin-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.admin-toggle.open{border-color:var(--accent);color:var(--accent);background:#c8a84b11}
+
+/* CONTENT */
+.content{padding:24px;max-width:840px;margin:0 auto}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.card h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.card p.sub{color:var(--muted);font-size:13px;margin-bottom:18px;line-height:1.6}
+
+/* FIELDS */
+.field{margin-bottom:15px}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field input,.field select{width:100%;background:var(--input-bg);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;font-family:'Barlow',sans-serif;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:#1a2236;color:var(--text)}
+
+/* FIXTURES */
+.fixture-list{display:flex;flex-direction:column;gap:10px}
+.fixture{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.team-side{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.team-flag{font-size:22px;line-height:1}
+.team-name{font-size:12px;font-weight:500;color:var(--text);word-break:break-word}
+.score-input{display:flex;align-items:center;gap:6px}
+.score-input input{width:50px;height:46px;background:var(--input-bg);border:1px solid var(--border2);color:var(--accent2);font-size:22px;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-align:center;border-radius:8px;outline:none;transition:border-color .2s}
+.score-input input:focus{border-color:var(--accent)}
+.score-sep{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--muted)}
+.match-label{font-size:10px;color:var(--muted);text-align:center;letter-spacing:.5px;margin-bottom:3px;font-weight:600;text-transform:uppercase}
+
+/* GROUP NAV */
+.group-header{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--accent);padding:16px 0 8px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.group-nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.group-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:6px 13px;border-radius:6px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.group-btn:hover{border-color:var(--accent);color:var(--accent)}
+.group-btn.active{background:#c8a84b22;border-color:var(--accent);color:var(--accent2)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 26px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--accent);color:#0a0f1e}
+.btn-primary:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--text);color:var(--text)}
+.btn-danger{background:transparent;border:1px solid #ef444466;color:#f87171}
+.btn-danger:hover{background:#ef444418;border-color:var(--red)}
+.btn-success-sm{background:#22c55e22;border:1px solid #22c55e55;color:var(--green);padding:8px 18px;font-size:13px}
+.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:22px;flex-wrap:wrap;gap:10px}
+
+/* ALERTS */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;line-height:1.5}
+.alert-success{background:#22c55e18;border:1px solid #22c55e44;color:var(--green)}
+.alert-warn{background:#c8a84b18;border:1px solid #c8a84b44;color:var(--accent2)}
+.alert-error{background:#ef444418;border:1px solid #ef444444;color:#f87171}
+.alert-info{background:#3b82f618;border:1px solid #3b82f644;color:#93c5fd}
+
+/* PROGRESS */
+.progress-bar{height:3px;background:var(--border);border-radius:99px;margin-bottom:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+.progress-text{font-size:11px;color:var(--muted);text-align:right;margin-bottom:14px}
+
+/* ADMIN PANEL */
+.admin-panel{background:var(--bg2);border:1px solid #c8a84b33;border-radius:12px;margin-bottom:20px}
+.admin-header-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #c8a84b22;cursor:pointer}
+.admin-header-bar h3{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}
+.admin-body{padding:22px}
+.admin-section{margin-bottom:26px}
+.admin-section:last-child{margin-bottom:0}
+.admin-section h4{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+
+/* STAGE TOGGLE ROWS */
+.stage-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.stage-row-left .s-name{font-weight:600;font-size:14px;margin-bottom:2px}
+.stage-row-left .s-desc{font-size:11px;color:var(--muted)}
+.toggle-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.toggle{position:relative;width:46px;height:26px;cursor:pointer;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:#ffffff10;border-radius:99px;transition:.3s;border:1px solid var(--border2)}
+.toggle-slider::before{content:'';position:absolute;width:19px;height:19px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.3s}
+.toggle input:checked+.toggle-slider{background:#22c55e25;border-color:#22c55e66}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:var(--green)}
+.badge{display:inline-block;padding:2px 9px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.badge-open{background:#22c55e22;color:var(--green);border:1px solid #22c55e44}
+.badge-closed{background:#ffffff08;color:var(--muted);border:1px solid var(--border)}
+
+/* KO EDITOR */
+.ko-match-block{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:13px;margin-bottom:8px}
+.ko-match-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:9px}
+.ko-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ko-team-field label{display:block;font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.ko-team-field input{width:100%;background:var(--input-bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color .2s}
+.ko-team-field input:focus{border-color:var(--accent)}
+.ko-team-field input.has-value{border-color:#22c55e55;color:var(--green)}
+
+/* CONFIG PANEL */
+.config-panel{background:#c8a84b08;border:1px solid #c8a84b22;border-radius:10px;padding:15px;margin-bottom:20px}
+.config-panel h3{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.config-panel input{width:100%;background:var(--input-bg);border:1px solid var(--border2);color:var(--text);padding:9px 12px;border-radius:6px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color .2s}
+.config-panel input:focus{border-color:var(--accent)}
+.config-panel p{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6}
+
+/* ADMIN LOGIN */
+.admin-login{padding:24px;text-align:center}
+.admin-login p{color:var(--muted);font-size:13px;margin-bottom:14px}
+.admin-login input{background:var(--input-bg);border:1px solid var(--border2);color:var(--text);padding:10px 16px;border-radius:8px;font-size:15px;font-family:'Barlow',sans-serif;outline:none;width:200px;text-align:center;letter-spacing:4px;transition:border-color .2s}
+.admin-login input:focus{border-color:var(--accent)}
+
+/* CODE BLOCK */
+.code-block{background:var(--input-bg);border-radius:8px;border:1px solid var(--border);padding:16px;overflow-x:auto;margin-top:14px}
+.code-block pre{font-size:11px;color:#88ccff;font-family:'Courier New',monospace;white-space:pre;line-height:1.7}
+
+/* READONLY SCORE */
+.score-readonly{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--accent2);text-align:center}
+
+/* RESPONSIVE */
+@media(max-width:480px){
+  .fixture{grid-template-columns:1fr auto 1fr;gap:6px;padding:12px 10px}
+  .score-input input{width:42px;height:40px;font-size:18px}
+  .team-name{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="trophy">🏆</span>
+  <h1>FIFA World Cup <span>2026</span></h1>
+  <p>Score Prediction Challenge</p>
+</div>
+
+<div class="top-nav">
+  <div class="top-nav-left" id="stepsBar"></div>
+  <button class="admin-toggle" id="adminToggleBtn" onclick="toggleAdminPanel()">⚙ Admin</button>
+</div>
+
+<div class="content">
+  <div id="adminArea"></div>
+  <div id="mainContent"></div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────
+   CONFIGURATION — change password here
+───────────────────────────────────────── */
+const ADMIN_PASSWORD = 'wc2026admin';
+
+/* ─────────────────────────────────────────
+   HARDCODED GOOGLE SHEET URL — paste yours here
+───────────────────────────────────────── */
+const SHEET_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+/* ─────────────────────────────────────────
+   DATA
+───────────────────────────────────────── */
+const STAGES = [
+  {id:'identity', label:'Your Info'},
+  {id:'group',    label:'Group Stage'},
+  {id:'r32',      label:'Round of 32'},
+  {id:'r16',      label:'Round of 16'},
+  {id:'qf',       label:'Quarter-finals'},
+  {id:'sf',       label:'Semi-finals'},
+  {id:'final',    label:'Final'},
+];
+
+const DEPARTMENTS = [
+  'Accounting','Finance','HR','IT','Legal','Logistics',
+  'Marketing','Operations','Procurement','Sales','Other'
+];
+
+const TEAMS_BY_GROUP = {
+  A:['🇺🇸 USA','🇲🇽 Mexico','🇨🇦 Canada','🇲🇦 Morocco'],
+  B:['🇦🇷 Argentina','🇨🇱 Chile','🇵🇪 Peru','🇦🇺 Australia'],
+  C:['🇧🇷 Brazil','🇺🇾 Uruguay','🇩🇴 Dominican Rep.','🇯🇵 Japan'],
+  D:['🇫🇷 France','🇩🇿 Algeria','🇧🇪 Belgium','🇰🇷 South Korea'],
+  E:['🇵🇹 Portugal','🇹🇷 Turkey','🇸🇳 Senegal','🇪🇨 Ecuador'],
+  F:['🇪🇸 Spain','🇵🇱 Poland','🇨🇷 Costa Rica','🇯🇲 Jamaica'],
+  G:['🇩🇪 Germany','🇨🇴 Colombia','🇨🇿 Czech Rep.','🇨🇲 Cameroon'],
+  H:['🏴󠁧󠁢󠁥󠁮󠁧󠁿 England','🇮🇷 Iran','🇺🇦 Ukraine','🇬🇭 Ghana'],
+  I:['🇳🇱 Netherlands','🇶🇦 Qatar','🇸🇻 El Salvador','🇿🇦 South Africa'],
+  J:['🇮🇹 Italy','🇨🇷 Costa Rica','🇳🇬 Nigeria','🇸🇪 Sweden'],
+  K:['🇵🇹 Portugal','🇸🇰 Slovakia','🇰🇷 South Korea','🇧🇫 Burkina Faso'],
+  L:['🇦🇷 Argentina','🇷🇴 Romania','🇳🇬 Nigeria','🇳🇿 New Zealand'],
+};
+
+const DEFAULT_KO = {
+  r32:[
+    {id:'r32_1', label:'Match 1',  home:'Winner Group A',  away:'Runner-up Group B'},
+    {id:'r32_2', label:'Match 2',  home:'Winner Group B',  away:'Runner-up Group A'},
+    {id:'r32_3', label:'Match 3',  home:'Winner Group C',  away:'Runner-up Group D'},
+    {id:'r32_4', label:'Match 4',  home:'Winner Group D',  away:'Runner-up Group C'},
+    {id:'r32_5', label:'Match 5',  home:'Winner Group E',  away:'Runner-up Group F'},
+    {id:'r32_6', label:'Match 6',  home:'Winner Group F',  away:'Runner-up Group E'},
+    {id:'r32_7', label:'Match 7',  home:'Winner Group G',  away:'Runner-up Group H'},
+    {id:'r32_8', label:'Match 8',  home:'Winner Group H',  away:'Runner-up Group G'},
+    {id:'r32_9', label:'Match 9',  home:'Winner Group I',  away:'Runner-up Group J'},
+    {id:'r32_10',label:'Match 10', home:'Winner Group J',  away:'Runner-up Group I'},
+    {id:'r32_11',label:'Match 11', home:'Winner Group K',  away:'Runner-up Group L'},
+    {id:'r32_12',label:'Match 12', home:'Winner Group L',  away:'Runner-up Group K'},
+    {id:'r32_13',label:'Match 13', home:'3rd Best A/B',    away:'3rd Best C/D'},
+    {id:'r32_14',label:'Match 14', home:'3rd Best E/F',    away:'3rd Best G/H'},
+    {id:'r32_15',label:'Match 15', home:'3rd Best I/J',    away:'3rd Best K/L'},
+    {id:'r32_16',label:'Match 16', home:'Best 3rd (1)',    away:'Best 3rd (2)'},
+  ],
+  r16:[
+    {id:'r16_1',label:'Match 1', home:'Winner R32 M1', away:'Winner R32 M2'},
+    {id:'r16_2',label:'Match 2', home:'Winner R32 M3', away:'Winner R32 M4'},
+    {id:'r16_3',label:'Match 3', home:'Winner R32 M5', away:'Winner R32 M6'},
+    {id:'r16_4',label:'Match 4', home:'Winner R32 M7', away:'Winner R32 M8'},
+    {id:'r16_5',label:'Match 5', home:'Winner R32 M9', away:'Winner R32 M10'},
+    {id:'r16_6',label:'Match 6', home:'Winner R32 M11',away:'Winner R32 M12'},
+    {id:'r16_7',label:'Match 7', home:'Winner R32 M13',away:'Winner R32 M14'},
+    {id:'r16_8',label:'Match 8', home:'Winner R32 M15',away:'Winner R32 M16'},
+  ],
+  qf:[
+    {id:'qf_1',label:'QF 1', home:'Winner R16 M1', away:'Winner R16 M2'},
+    {id:'qf_2',label:'QF 2', home:'Winner R16 M3', away:'Winner R16 M4'},
+    {id:'qf_3',label:'QF 3', home:'Winner R16 M5', away:'Winner R16 M6'},
+    {id:'qf_4',label:'QF 4', home:'Winner R16 M7', away:'Winner R16 M8'},
+  ],
+  sf:[
+    {id:'sf_1',label:'SF 1', home:'Winner QF 1', away:'Winner QF 2'},
+    {id:'sf_2',label:'SF 2', home:'Winner QF 3', away:'Winner QF 4'},
+  ],
+  final:[
+    {id:'final_1',label:'The Final', home:'Winner SF 1', away:'Winner SF 2'},
+  ],
+};
+
+function deepClone(o){return JSON.parse(JSON.stringify(o));}
+
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+let state = {
+  currentStep: 0,
+  identity: {name:'', email:'', department:''},
+  scores: {},
+  submittedStages: [],
+  activeGroup: 'A',
+  sheetUrl: '',
+  adminOpen: false,
+  adminAuthed: false,
+  stageOpen: {group:true, r32:false, r16:false, qf:false, sf:false, final:false},
+  koTeams: deepClone(DEFAULT_KO),
+};
+
+function getSaved(){try{return JSON.parse(localStorage.getItem('wc2026_predictor')||'{}');}catch{return {};}}
+function saveLocal(){
+  localStorage.setItem('wc2026_predictor', JSON.stringify({
+    identity:       state.identity,
+    submittedStages:state.submittedStages,
+    scores:         state.scores,
+    sheetUrl:       state.sheetUrl,
+    stageOpen:      state.stageOpen,
+    koTeams:        state.koTeams,
+    adminAuthed:    state.adminAuthed,
+  }));
+}
+function loadLocal(){
+  const s = getSaved();
+  if(s.identity)        state.identity        = s.identity;
+  if(s.submittedStages) state.submittedStages  = s.submittedStages;
+  if(s.scores)          state.scores           = s.scores;
+  if(s.sheetUrl)        state.sheetUrl         = s.sheetUrl;
+  if(s.stageOpen)       state.stageOpen        = {...state.stageOpen, ...s.stageOpen};
+  if(s.koTeams)         state.koTeams          = s.koTeams;
+  if(s.adminAuthed)     state.adminAuthed      = s.adminAuthed;
+}
+
+/* ─────────────────────────────────────────
+   NAVIGATION
+───────────────────────────────────────── */
+function renderStepsBar(){
+  const bar = document.getElementById('stepsBar');
+  bar.innerHTML = STAGES.map((s,i) => {
+    const isIdentity = s.id === 'identity';
+    const submitted  = !isIdentity && state.submittedStages.includes(s.id);
+    const open       = isIdentity || state.stageOpen[s.id];
+    const needsId    = i > 0 && !state.identity.email;
+    const isLocked   = !isIdentity && !open;
+    const cls = ['step-tab',
+      i === state.currentStep ? 'active' : '',
+      submitted ? 'done' : '',
+      isLocked  ? 'locked-stage' : '',
+    ].filter(Boolean).join(' ');
+    return `<button class="${cls}" onclick="goStep(${i})" ${isLocked||needsId?'disabled':''}>${s.label}${submitted?' ✓':''}</button>`;
+  }).join('');
+}
+
+function goStep(i){
+  if(i === state.currentStep) return;
+  if(i > 0 && !state.identity.email){alert('Please complete your info first.');return;}
+  const sid = STAGES[i].id;
+  if(sid !== 'identity' && !state.stageOpen[sid]){
+    alert('This stage is not open yet. The admin will enable it once the teams are confirmed.');return;
+  }
+  state.currentStep = i;
+  render();
+}
+
+/* ─────────────────────────────────────────
+   MAIN RENDER
+───────────────────────────────────────── */
+function render(){
+  renderStepsBar();
+  renderAdminArea();
+  const c = document.getElementById('mainContent');
+  const step = STAGES[state.currentStep];
+  if(step.id === 'identity')   c.innerHTML = renderIdentity();
+  else if(step.id === 'group') c.innerHTML = renderGroupStage();
+  else                         c.innerHTML = renderKOStage(step.id);
+  bindEvents();
+}
+
+/* ─────────────────────────────────────────
+   ADMIN PANEL
+───────────────────────────────────────── */
+function toggleAdminPanel(){
+  state.adminOpen = !state.adminOpen;
+  document.getElementById('adminToggleBtn').classList.toggle('open', state.adminOpen);
+  renderAdminArea();
+}
+
+function renderAdminArea(){
+  const el = document.getElementById('adminArea');
+  if(!state.adminOpen){el.innerHTML='';return;}
+
+  if(!state.adminAuthed){
+    el.innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-header-bar" onclick="toggleAdminPanel()">
+        <h3>⚙ Admin Panel</h3>
+        <span style="font-size:12px;color:var(--muted)">Click to close ✕</span>
+      </div>
+      <div class="admin-login">
+        <p>Enter the admin password to access controls</p>
+        <input type="password" id="adminPwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkAdminPw()"/>
+        <br/><br/>
+        <button class="btn btn-primary" onclick="checkAdminPw()">Unlock Panel</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const stageLabels = {group:'Group Stage',r32:'Round of 32',r16:'Round of 16',qf:'Quarter-finals',sf:'Semi-finals',final:'Final'};
+  const stageRows = ['group','r32','r16','qf','sf','final'].map(sid => {
+    const on = state.stageOpen[sid];
+    return `
+    <div class="stage-row">
+      <div class="stage-row-left">
+        <div class="s-name">${stageLabels[sid]}</div>
+        <div class="s-desc">${on ? 'Open — participants can submit predictions' : 'Closed — hidden from participants'}</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="badge ${on?'badge-open':'badge-closed'}">${on?'Open':'Closed'}</span>
+        <label class="toggle">
+          <input type="checkbox" ${on?'checked':''} onchange="toggleStage('${sid}',this.checked)"/>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>`;
+  }).join('');
+
+  const isPlaceholder = t => /^(Winner|Runner|3rd|Best)/.test(t);
+  const koSections = Object.entries(state.koTeams).map(([stageId, fixtures]) => {
+    const rows = fixtures.map(f => `
+      <div class="ko-match-block">
+        <div class="ko-match-title">${f.label}</div>
+        <div class="ko-editor-grid">
+          <div class="ko-team-field">
+            <label>Home team</label>
+            <input type="text" value="${f.home}" data-stage="${stageId}" data-id="${f.id}" data-side="home"
+              class="ko-input${!isPlaceholder(f.home)?' has-value':''}" placeholder="${f.home}"/>
+          </div>
+          <div class="ko-team-field">
+            <label>Away team</label>
+            <input type="text" value="${f.away}" data-stage="${stageId}" data-id="${f.id}" data-side="away"
+              class="ko-input${!isPlaceholder(f.away)?' has-value':''}" placeholder="${f.away}"/>
+          </div>
+        </div>
+      </div>`).join('');
+    return `<div style="margin-bottom:20px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text);margin-bottom:10px">${stageLabels[stageId]}</div>${rows}</div>`;
+  }).join('');
+
+  el.innerHTML = `
+  <div class="admin-panel">
+    <div class="admin-header-bar" onclick="toggleAdminPanel()">
+      <h3>⚙ Admin Panel</h3>
+      <span style="font-size:12px;color:var(--green)">● Authenticated · Click to close ✕</span>
+    </div>
+    <div class="admin-body">
+
+      <div class="config-panel">
+        <h3>Google Sheets Web App URL</h3>
+        <input type="text" id="adminSheetUrl" placeholder="https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec" value="${state.sheetUrl}" style="margin-bottom:8px"/>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" style="font-size:13px;padding:8px 20px" onclick="saveSheetUrl()">💾 Save URL</button>
+          <span id="sheetUrlStatus" style="font-size:12px;color:var(--muted)">${state.sheetUrl ? '✓ URL saved: ' + state.sheetUrl.slice(0,50) + '…' : 'No URL saved yet'}</span>
+        </div>
+        <p style="margin-top:8px">Paste your Apps Script Web App URL then click Save. All prediction submissions will POST to this endpoint.</p>
+      </div>
+
+      <div class="admin-section">
+        <h4>Google Apps Script Setup</h4>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          1. Create a new Google Sheet &nbsp;→&nbsp;
+          2. <strong style="color:var(--text)">Extensions → Apps Script</strong> &nbsp;→&nbsp;
+          3. Paste the script below &amp; Save &nbsp;→&nbsp;
+          4. <strong style="color:var(--text)">Deploy → New deployment → Web App</strong> &nbsp;→&nbsp;
+          5. Execute as: <strong style="color:var(--text)">Me</strong> · Access: <strong style="color:var(--text)">Anyone</strong> &nbsp;→&nbsp;
+          6. Copy URL and paste above
+        </p>
+        <div class="code-block" style="max-height:260px;overflow-y:auto"><pre>${getAppsScript()}</pre></div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Stage Access Control</h4>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Toggle stages open or closed. Participants can only see and submit stages that are open. Close Group Stage once results are known, then open Round of 32 and fill in the qualified teams below.</p>
+        ${stageRows}
+      </div>
+
+      <div class="admin-section">
+        <h4>Knockout Stage — Team Names</h4>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Replace placeholder names with the real qualified teams. Green fields = real team entered. Click <strong style="color:var(--text)">Save Team Names</strong> when done — participants will see the updated names immediately.</p>
+        ${koSections}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+          <button class="btn btn-success-sm" onclick="saveKoTeams()">✓ Save Team Names</button>
+          <button class="btn btn-danger" style="font-size:13px;padding:8px 18px" onclick="resetKoTeams()">↺ Reset to Defaults</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Danger Zone</h4>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-danger" style="font-size:13px;padding:8px 18px" onclick="adminClearAll()">🗑 Clear All Local Data</button>
+          <span style="font-size:11px;color:var(--muted)">Wipes all predictions and settings saved in this browser</span>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+
+  document.querySelectorAll('.ko-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const {stage, id, side} = e.target.dataset;
+      const fx = state.koTeams[stage].find(f => f.id === id);
+      if(fx){
+        fx[side] = e.target.value;
+        e.target.classList.toggle('has-value', !!e.target.value && !isPlaceholder(e.target.value));
+      }
+    });
+  });
+
+  // URL is saved via the saveSheetUrl() button instead of auto-save on input
+}
+
+function checkAdminPw(){
+  const inp = document.getElementById('adminPwInput');
+  if(!inp) return;
+  if(inp.value === ADMIN_PASSWORD){
+    state.adminAuthed = true;
+    saveLocal();
+    renderAdminArea();
+  } else {
+    inp.style.borderColor = 'var(--red)';
+    inp.value = '';
+    inp.placeholder = 'Wrong password';
+    setTimeout(()=>{ inp.style.borderColor=''; inp.placeholder='••••••••'; }, 1500);
+  }
+}
+
+function toggleStage(sid, val){
+  state.stageOpen[sid] = val;
+  saveLocal();
+  renderStepsBar();
+  renderAdminArea();
+}
+
+function saveKoTeams(){
+  saveLocal();
+  render();
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Saved!';
+  btn.style.background = '#22c55e33';
+  setTimeout(()=>{ btn.textContent = orig; btn.style.background = ''; }, 2000);
+}
+
+function resetKoTeams(){
+  if(!confirm('Reset all knockout team names back to placeholder defaults?')) return;
+  state.koTeams = deepClone(DEFAULT_KO);
+  saveLocal();
+  renderAdminArea();
+  render();
+}
+
+function adminClearAll(){
+  if(!confirm('This will wipe ALL locally saved data including predictions, settings and admin auth. Continue?')) return;
+  localStorage.removeItem('wc2026_predictor');
+  location.reload();
+}
+
+/* ─────────────────────────────────────────
+   IDENTITY PAGE
+───────────────────────────────────────── */
+function renderIdentity(){
+  const {name, email, department} = state.identity;
+  return `
+  <div class="card">
+    <h2>Your Details</h2>
+    <p class="sub">Enter your info below. Your email address is used to prevent duplicate submissions per stage — once a stage is submitted, it locks for your email.</p>
+    <div class="field"><label>Full Name</label>
+      <input type="text" id="inp_name" value="${esc(name)}" placeholder="e.g. John Smith"/>
+    </div>
+    <div class="field"><label>Email Address</label>
+      <input type="email" id="inp_email" value="${esc(email)}" placeholder="your@company.com"/>
+    </div>
+    <div class="field"><label>Department</label>
+      <input type="text" id="inp_dept" value="${esc(department)}" placeholder="e.g. Finance, HR, IT…"/>
+    </div>
+    <div class="btn-row">
+      <span style="font-size:12px;color:var(--muted)">All fields required</span>
+      <button class="btn btn-primary" onclick="saveIdentity()">Continue →</button>
+    </div>
+  </div>
+
+  `;
+}
+
+function getAppsScript(){
+  return `// ── Duplicate check (GET) ───────────────────────────────────────────
+function doGet(e) {
+  try {
+    var action = e.parameter.action;
+    if (action === "check") {
+      var email  = (e.parameter.email  || "").toLowerCase().trim();
+      var stage  = (e.parameter.stage  || "").trim();
+      var ss     = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet  = ss.getSheetByName(stage);
+      var duplicate = false;
+      if (sheet && sheet.getLastRow() > 1) {
+        // Email is column 3 (index 2), Stage is column 5 (index 4)
+        var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+        for (var i = 0; i < data.length; i++) {
+          if (String(data[i][2]).toLowerCase().trim() === email) {
+            duplicate = true;
+            break;
+          }
+        }
+      }
+      return ContentService
+        .createTextOutput(JSON.stringify({ duplicate: duplicate }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "ok" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ── Prediction submit (POST) ─────────────────────────────────────────
+function doPost(e) {
+  try {
+    // Data arrives as URLSearchParams (payload= field) to survive no-cors mode
+    var raw = (e.parameter && e.parameter.payload) ? e.parameter.payload : e.postData.contents;
+    var data = JSON.parse(raw);
+    var email = (data.email || "").toLowerCase().trim();
+    var stage = (data.stage || "").trim();
+    var ss    = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(stage) || ss.insertSheet(stage);
+
+    // Create header row if sheet is new
+    if (sheet.getLastRow() === 0) {
+      var headers = [
+        "Timestamp", "Name", "Email", "Department",
+        "Stage", "Group", "Match", "Home Team", "Away Team",
+        "Home Score", "Away Score"
+      ];
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, headers.length)
+           .setFontWeight("bold")
+           .setBackground("#1a2a4a")
+           .setFontColor("#ffffff");
+    }
+
+    // Block duplicate — check email column (col 3) against this stage's sheet
+    if (sheet.getLastRow() > 1) {
+      var existing = sheet.getRange(2, 3, sheet.getLastRow() - 1, 1).getValues();
+      for (var i = 0; i < existing.length; i++) {
+        if (String(existing[i][0]).toLowerCase().trim() === email) {
+          return ContentService
+            .createTextOutput(JSON.stringify({ status: "duplicate" }))
+            .setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    }
+
+    // Write all predictions
+    data.predictions.forEach(function(r) {
+      sheet.appendRow([
+        new Date(), data.name, data.email, data.department,
+        stage, r.group || "", r.match, r.home, r.away,
+        r.homeScore, r.awayScore
+      ]);
+    });
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "ok" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+}
+
+function saveIdentity(){
+  const name  = document.getElementById('inp_name').value.trim();
+  const email = document.getElementById('inp_email').value.trim();
+  const dept  = document.getElementById('inp_dept').value;
+  if(!name || !email || !dept){ alert('Please fill in all fields.'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ alert('Please enter a valid email address.'); return; }
+  state.identity = {name, email, department:dept};
+  saveLocal();
+  const nextOpen = STAGES.findIndex((s,i) => i > 0 && state.stageOpen[s.id]);
+  state.currentStep = nextOpen > 0 ? nextOpen : 1;
+  render();
+}
+
+/* ─────────────────────────────────────────
+   GROUP STAGE
+───────────────────────────────────────── */
+function buildGroupFixtures(){
+  const fx = [];
+  Object.entries(TEAMS_BY_GROUP).forEach(([g, teams]) => {
+    for(let i = 0; i < teams.length; i++)
+      for(let j = i+1; j < teams.length; j++)
+        fx.push({group:g, home:teams[i], away:teams[j], id:`G${g}_${i}_${j}`, label:`Group ${g}: ${teams[i]} vs ${teams[j]}`});
+  });
+  return fx;
+}
+
+function renderGroupStage(){
+  const submitted = state.submittedStages.includes('group');
+  const fixtures  = buildGroupFixtures();
+  const ag        = state.activeGroup;
+  const groupFx   = fixtures.filter(f => f.group === ag);
+  const done      = countFilled(fixtures.map(f => f.id));
+  const total     = fixtures.length;
+
+  let html = `<h2 style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Group Stage Predictions</h2>`;
+
+  if(submitted){
+    html += `<div class="alert alert-success">✓ Group Stage submitted and locked. Your predictions have been recorded.</div>`;
+    html += renderGroupReadOnly(fixtures);
+    return html;
+  }
+
+  html += `<div class="progress-bar"><div class="progress-fill" id="progFill" style="width:${pct(done,total)}%"></div></div>
+  <p class="progress-text" id="progText">${done} / ${total} matches filled across all groups</p>`;
+
+  html += `<div class="group-nav">${Object.keys(TEAMS_BY_GROUP).map(g =>
+    `<button class="group-btn${g===ag?' active':''}" onclick="setGroup('${g}')">Group ${g}</button>`).join('')}
+  </div>`;
+
+  html += `<div class="group-header">Group ${ag}</div><div class="fixture-list">`;
+  groupFx.forEach(f => {
+    const hs = state.scores[f.id+'_h'] ?? '';
+    const as = state.scores[f.id+'_a'] ?? '';
+    const [hf,...hr] = f.home.split(' ');
+    const [af,...ar] = f.away.split(' ');
+    html += `<div class="fixture">
+      <div class="team-side">
+        <div class="team-flag">${hf}</div>
+        <div class="team-name">${hr.join(' ')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="match-label">Score</div>
+        <div class="score-input">
+          <input type="number" min="0" max="30" value="${hs}" data-id="${f.id}_h" class="score-field" placeholder="0"/>
+          <span class="score-sep">:</span>
+          <input type="number" min="0" max="30" value="${as}" data-id="${f.id}_a" class="score-field" placeholder="0"/>
+        </div>
+      </div>
+      <div class="team-side">
+        <div class="team-flag">${af}</div>
+        <div class="team-name">${ar.join(' ')}</div>
+      </div>
+    </div>`;
+  });
+  html += `</div>
+  <div class="btn-row">
+    <span style="font-size:12px;color:var(--muted)">You must fill all ${total} matches across all 12 groups before submitting</span>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitStage('group')" ${done<total?'disabled':''}>Submit Group Stage</button>
+  </div>`;
+  return html;
+}
+
+function renderGroupReadOnly(fixtures){
+  let html = '';
+  Object.keys(TEAMS_BY_GROUP).forEach(g => {
+    const gfx = fixtures.filter(f => f.group === g);
+    html += `<div class="group-header">Group ${g}</div><div class="fixture-list">`;
+    gfx.forEach(f => {
+      const hs = state.scores[f.id+'_h'] ?? '-';
+      const as = state.scores[f.id+'_a'] ?? '-';
+      const [hf,...hr] = f.home.split(' ');
+      const [af,...ar] = f.away.split(' ');
+      html += `<div class="fixture">
+        <div class="team-side"><div class="team-flag">${hf}</div><div class="team-name">${hr.join(' ')}</div></div>
+        <div style="text-align:center">
+          <div class="match-label">Your Prediction</div>
+          <div class="score-readonly">${hs} : ${as}</div>
+        </div>
+        <div class="team-side"><div class="team-flag">${af}</div><div class="team-name">${ar.join(' ')}</div></div>
+      </div>`;
+    });
+    html += `</div><br/>`;
+  });
+  return html;
+}
+
+/* ─────────────────────────────────────────
+   KNOCKOUT STAGE
+───────────────────────────────────────── */
+function renderKOStage(stageId){
+  const stageLabels = {r32:'Round of 32', r16:'Round of 16', qf:'Quarter-finals', sf:'Semi-finals', final:'The Final'};
+  const label    = stageLabels[stageId];
+  const submitted= state.submittedStages.includes(stageId);
+  const fixtures = state.koTeams[stageId];
+  const done     = countFilled(fixtures.map(f => f.id));
+  const total    = fixtures.length;
+  const isPlaceholder = t => /^(Winner|Runner|3rd|Best)/.test(t);
+
+  let html = `<h2 style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">${label} Predictions</h2>`;
+
+  if(submitted){
+    html += `<div class="alert alert-success">✓ ${label} submitted and locked. Your predictions have been recorded.</div>`;
+    html += `<div class="fixture-list">`;
+    fixtures.forEach(f => {
+      const hs = state.scores[f.id+'_h'] ?? '-';
+      const as = state.scores[f.id+'_a'] ?? '-';
+      const showFlag = !isPlaceholder(f.home);
+      html += `<div class="fixture">
+        <div class="team-side">
+          ${showFlag?`<div class="team-flag">${f.home.split(' ')[0]}</div>`:''}
+          <div class="team-name" style="font-size:${isPlaceholder(f.home)?'11px':'13px'};color:${isPlaceholder(f.home)?'var(--muted)':'var(--text)'}">
+            ${isPlaceholder(f.home)?f.home:f.home.split(' ').slice(1).join(' ')}
+          </div>
+        </div>
+        <div style="text-align:center">
+          <div class="match-label">${f.label}</div>
+          <div class="score-readonly">${hs} : ${as}</div>
+        </div>
+        <div class="team-side">
+          ${!isPlaceholder(f.away)?`<div class="team-flag">${f.away.split(' ')[0]}</div>`:''}
+          <div class="team-name" style="font-size:${isPlaceholder(f.away)?'11px':'13px'};color:${isPlaceholder(f.away)?'var(--muted)':'var(--text)'}">
+            ${isPlaceholder(f.away)?f.away:f.away.split(' ').slice(1).join(' ')}
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  html += `<div class="progress-bar"><div class="progress-fill" id="progFill" style="width:${pct(done,total)}%"></div></div>
+  <p class="progress-text" id="progText">${done} / ${total} matches filled</p>
+  <div class="fixture-list">`;
+
+  fixtures.forEach(f => {
+    const hs = state.scores[f.id+'_h'] ?? '';
+    const as = state.scores[f.id+'_a'] ?? '';
+    const ph = isPlaceholder(f.home);
+    const pa = isPlaceholder(f.away);
+    html += `<div class="fixture">
+      <div class="team-side">
+        ${!ph?`<div class="team-flag">${f.home.split(' ')[0]}</div>`:''}
+        <div class="team-name" style="font-size:${ph?'11px':'13px'};color:${ph?'var(--muted)':'var(--text)'}">
+          ${ph ? f.home : f.home.split(' ').slice(1).join(' ')}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="match-label">${f.label}</div>
+        <div class="score-input">
+          <input type="number" min="0" max="30" value="${hs}" data-id="${f.id}_h" class="score-field" placeholder="0"/>
+          <span class="score-sep">:</span>
+          <input type="number" min="0" max="30" value="${as}" data-id="${f.id}_a" class="score-field" placeholder="0"/>
+        </div>
+      </div>
+      <div class="team-side">
+        ${!pa?`<div class="team-flag">${f.away.split(' ')[0]}</div>`:''}
+        <div class="team-name" style="font-size:${pa?'11px':'13px'};color:${pa?'var(--muted)':'var(--text)'}">
+          ${pa ? f.away : f.away.split(' ').slice(1).join(' ')}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>
+  <div class="btn-row">
+    <span style="font-size:12px;color:var(--muted)">Fill all ${total} matches to submit</span>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitStage('${stageId}')" ${done<total?'disabled':''}>Submit ${label}</button>
+  </div>`;
+  return html;
+}
+
+/* ─────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────── */
+function countFilled(ids){
+  return ids.filter(id =>
+    state.scores[id+'_h'] !== undefined && state.scores[id+'_h'] !== '' &&
+    state.scores[id+'_a'] !== undefined && state.scores[id+'_a'] !== ''
+  ).length;
+}
+
+function pct(a,b){ return b ? Math.round(a/b*100) : 0; }
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function setGroup(g){ state.activeGroup = g; render(); }
+
+function bindEvents(){
+  document.querySelectorAll('.score-field').forEach(inp => {
+    inp.addEventListener('input', e => {
+      state.scores[e.target.getAttribute('data-id')] = e.target.value;
+      saveLocal();
+      updateProgress();
+    });
+  });
+}
+
+function updateProgress(){
+  const step = STAGES[state.currentStep];
+  if(step.id === 'identity') return;
+  let ids;
+  if(step.id === 'group') ids = buildGroupFixtures().map(f => f.id);
+  else ids = (state.koTeams[step.id]||[]).map(f => f.id);
+  const done  = countFilled(ids);
+  const total = ids.length;
+  const pf = document.getElementById('progFill');
+  const pt = document.getElementById('progText');
+  const sb = document.getElementById('submitBtn');
+  if(pf) pf.style.width = pct(done,total) + '%';
+  if(pt) pt.textContent = `${done} / ${total} matches filled${step.id==='group' ? ' across all groups' : ''}`;
+  if(sb) sb.disabled = done < total;
+}
+
+/* ─────────────────────────────────────────
+   SUBMIT  (with server-side duplicate check)
+───────────────────────────────────────── */
+async function submitStage(stageId){
+  // Local guard — already submitted in this browser
+  if(state.submittedStages.includes(stageId)){
+    alert('You have already submitted this stage!');
+    return;
+  }
+
+  let fixtures, stageLabel;
+  if(stageId === 'group'){
+    fixtures   = buildGroupFixtures();
+    stageLabel = 'Group Stage';
+  } else {
+    fixtures   = state.koTeams[stageId];
+    stageLabel = {r32:'Round of 32', r16:'Round of 16', qf:'Quarter-finals', sf:'Semi-finals', final:'Final'}[stageId];
+  }
+
+  const btn = document.getElementById('submitBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Checking…'; }
+
+  // ── DEBUG: confirm sheetUrl is loaded ──
+  console.log('DEBUG sheetUrl:', SHEET_URL);
+  console.log('DEBUG email:', state.identity.email);
+  console.log('DEBUG stage:', stageLabel);
+  if(!SHEET_URL || SHEET_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
+    alert('⚠ No Google Sheets URL configured. Please hardcode SHEET_URL in the script.');
+    if(btn){ btn.disabled = false; btn.textContent = 'Submit ' + stageLabel; }
+    return;
+  }
+
+  // ── Server-side duplicate check (GET) ──────────────────────────────
+  try {
+    const checkUrl = `${SHEET_URL}?action=check&email=${encodeURIComponent(state.identity.email)}&stage=${encodeURIComponent(stageLabel)}`;
+    console.log('DEBUG checkUrl:', checkUrl);
+    const res  = await fetch(checkUrl);
+    const data = await res.json();
+    console.log('DEBUG duplicate check result:', data);
+    if(data.duplicate){
+      state.submittedStages.push(stageId);
+      saveLocal();
+      render();
+      alert(`⚠ Your email (${state.identity.email}) has already submitted the ${stageLabel}. Duplicate submission blocked.`);
+      return;
+    }
+  } catch(e){
+    console.warn('Duplicate check failed:', e);
+    alert('⚠ DEBUG: Duplicate check failed — ' + e.message + '\n\nWill still attempt to submit.');
+  }
+
+  if(btn){ btn.textContent = 'Sending…'; }
+
+  const predictions = fixtures.map(f => ({
+    match:     f.label || `${f.home} vs ${f.away}`,
+    group:     f.group ? `Group ${f.group}` : '',
+    home:      f.home,
+    away:      f.away,
+    homeScore: state.scores[f.id+'_h'] ?? '',
+    awayScore: state.scores[f.id+'_a'] ?? '',
+  }));
+
+  const payload = {
+    action:      'submit',
+    name:        state.identity.name,
+    email:       state.identity.email,
+    department:  state.identity.department,
+    stage:       stageLabel,
+    predictions,
+  };
+
+  console.log('DEBUG payload:', JSON.stringify(payload).slice(0, 200));
+
+  try {
+    await sendToSheet(SHEET_URL, payload);
+    alert('✓ DEBUG: Form submitted to Google Sheet. Check the sheet now — a new row should appear within a few seconds.');
+  } catch(e){
+    alert('⚠ DEBUG: sendToSheet error — ' + e.message);
+  }
+
+  state.submittedStages.push(stageId);
+  saveLocal();
+  render();
+}
+
+/* ─────────────────────────────────────────
+   SEND TO GOOGLE SHEET (iframe form trick)
+   — bypasses all CORS issues completely
+───────────────────────────────────────── */
+function sendToSheet(url, payload){
+  return new Promise((resolve) => {
+    // Create a hidden iframe to receive the form response
+    const iframe = document.createElement('iframe');
+    iframe.name  = 'hidden_submit_' + Date.now();
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    // Create a hidden form targeting the iframe
+    const form = document.createElement('form');
+    form.method  = 'POST';
+    form.action  = url;
+    form.target  = iframe.name;
+    form.style.display = 'none';
+
+    // Append the full payload as a single hidden field
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = 'payload';
+    input.value = JSON.stringify(payload);
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+
+    // Clean up after submission
+    iframe.onload = () => {
+      setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+      }, 2000);
+      resolve();
+    };
+
+    // Submit and resolve after timeout even if onload doesn't fire
+    form.submit();
+    setTimeout(resolve, 5000);
+  });
+}
+
+/* ─────────────────────────────────────────
+   SHEET URL SAVE
+───────────────────────────────────────── */
+function saveSheetUrl(){
+  const inp = document.getElementById('adminSheetUrl');
+  if(!inp) return;
+  const val = inp.value.trim();
+  if(val && !val.startsWith('https://script.google.com')){
+    const status = document.getElementById('sheetUrlStatus');
+    if(status){ status.textContent = '⚠ URL must start with https://script.google.com'; status.style.color='var(--red)'; }
+    return;
+  }
+  state.sheetUrl = val;
+  saveLocal();
+  const status = document.getElementById('sheetUrlStatus');
+  if(status){
+    status.textContent = val ? '✓ Saved: ' + val.slice(0,50) + '…' : '✓ URL cleared';
+    status.style.color = 'var(--green)';
+    setTimeout(() => { status.style.color = 'var(--muted)'; }, 3000);
+  }
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Saved!';
+  setTimeout(() => { btn.textContent = orig; }, 2000);
+}
+
+/* ─────────────────────────────────────────
+   BOOT
+───────────────────────────────────────── */
+loadLocal();
+render();
+</script>
+</body>
+</html>
